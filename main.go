@@ -1,20 +1,42 @@
 package main
 
 import (
+	"errors"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/joho/godotenv"
 	"log"
 	"os"
 )
 
+func LoadEnv() error {
+	err := godotenv.Load()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func GetTelegramToken() (string, error) {
+	token := os.Getenv("TELEGRAM_TOKEN")
+	if token == "" {
+		return "", errors.New("TELEGRAM_TOKEN environment variable not set")
+	}
+	return token, nil
+}
+
 func main() {
 
-	errLoadEnv := godotenv.Load()
+	errLoadEnv := LoadEnv()
 	if errLoadEnv != nil {
 		log.Fatal("Error loading .env file")
 	}
 
-	bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_TOKEN"))
+	telegramToken, errGetToken := GetTelegramToken()
+	if errGetToken != nil {
+		log.Fatal(errGetToken)
+	}
+
+	bot, err := tgbotapi.NewBotAPI(telegramToken)
 	if err != nil {
 		log.Panic(err)
 	}
