@@ -1,20 +1,13 @@
 package main
 
 import (
+	"context"
 	"errors"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"github.com/joho/godotenv"
 	"log"
 	"os"
+	"todo_list_telegram/postgresql"
 )
-
-func LoadEnv() error {
-	err := godotenv.Load()
-	if err != nil {
-		return err
-	}
-	return nil
-}
 
 func GetTelegramToken() (string, error) {
 	token := os.Getenv("TELEGRAM_TOKEN")
@@ -29,6 +22,16 @@ func main() {
 	errLoadEnv := LoadEnv()
 	if errLoadEnv != nil {
 		log.Fatal("Error loading .env file")
+	}
+
+	pgClient, errConnectPg := postgresql.NewPostgresClient()
+	if errConnectPg != nil {
+		log.Fatal(errConnectPg)
+	}
+
+	errConnectPg = pgClient.Ping(context.Background())
+	if errConnectPg != nil {
+		log.Fatal(errConnectPg)
 	}
 
 	telegramToken, errGetToken := GetTelegramToken()
