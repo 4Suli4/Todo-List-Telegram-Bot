@@ -6,6 +6,8 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log"
 	"os"
+	"todo_list_telegram/db"
+	"todo_list_telegram/model"
 	"todo_list_telegram/postgresql"
 )
 
@@ -28,6 +30,8 @@ func main() {
 	if errConnectPg != nil {
 		log.Fatal(errConnectPg)
 	}
+
+	db := db.NewTodoDb(pgClient)
 
 	errConnectPg = pgClient.Ping(context.Background())
 	if errConnectPg != nil {
@@ -53,6 +57,17 @@ func main() {
 	for update := range updates {
 		if update.Message == nil {
 			continue
+		}
+		if update.Message.Text == "/create" {
+			err := db.AddTodo(context.Background(), model.Todo{
+				UUID:  "",
+				Title: "from telegram bot",
+				Done:  1,
+			})
+			if err != nil {
+				bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, err.Error()))
+				return
+			}
 		}
 		log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
 	}
